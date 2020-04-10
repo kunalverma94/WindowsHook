@@ -2,14 +2,45 @@
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
     public class gcc
     {
-        private static readonly int h = 1080;
-        private static readonly int w = 1920;
         protected delegate int HookProc(int nCode, int wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        protected class KeyboardHookStruct
+        {
+            public int vkCode;
+            public int scanCode;
+            public int flags;
+            public int time;
+            public int dwExtraInfo;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        protected class MouseLLHookStruct
+        {
+            public Point pt;
+            public int mouseData;
+            public int flags;
+            public int time;
+            public int dwExtraInfo;
+        }
+        [DllImport("user32")]
+        protected static extern int ToAscii(
+    int uVirtKey,
+    int uScanCode,
+    byte[] lpbKeyState,
+    byte[] lpwTransKey,
+    int fuState);
+
+        [DllImport("user32")]
+        protected static extern int GetKeyboardState(byte[] pbKeyState);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        protected static extern short GetKeyState(int vKey);
         //[StructLayout(LayoutKind.Sequential)]
         //public class MouseLLHookStruct
         //{
@@ -29,25 +60,71 @@ namespace WindowsFormsApp1
     int dwThreadId);
         public gcc()
         {
+
+            KeyHook();  // mouseHook();
+        }
+
+        private static void mouseHook()
+        {
             try
             {
                 SetWindowsHookEx(
               14,
               (x, y, z) =>
               {
-                  if (y==513)
+                  // Console.WriteLine("{0}\n{1}\n{2}", x, y, z);
+                  if (y == 513)
                   {
-                  using (Bitmap b = new Bitmap(w,h))
+                      Snip("msPrmy");
+                  }
+                  return 0;
+              },
+              Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]),
+              0);
+            }
+            finally
+            {
+                GC.Collect();
+            }
+        }
+
+        private static void Snip(string from)
+        {
+            Rectangle resolution = Screen.PrimaryScreen.Bounds;
+           var h = resolution.Height;
+           var w = resolution.Width;
+            using (Bitmap b = new Bitmap(w, h))
+            {
+                var gr = Graphics.FromImage(b);
+                gr.CopyFromScreen(Point.Empty, Point.Empty, new Size()
+                {
+                    Height = h,
+                    Width = w
+                });
+                b.Save($@"D:\Users\dmp\{from}{DateTime.Now.TimeOfDay.ToString().Replace(':', '_')}.jpg",
+                    System.Drawing.Imaging.ImageFormat.Jpeg);
+                gr.Dispose();
+                b.Dispose();
+            }
+        }
+
+        private static void KeyHook()
+        {
+            try
+            {
+                SetWindowsHookEx(
+              13,
+              (x, wParam, lParam) =>
+              {
+
+                  if (wParam == 256)
+                  {
+                      KeyboardHookStruct keyboardHookStruct =
+    (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
+                      if (keyboardHookStruct.vkCode==44 && keyboardHookStruct.scanCode==55)
                       {
-                          var gr = Graphics.FromImage(b);
-                          gr.CopyFromScreen(Point.Empty, Point.Empty, new Size()
-                          {
-                              Height=h,Width=w
-                          });
-                          b.Save($@"D:\Users\dmp\{DateTime.Now.TimeOfDay.ToString().Replace(':', '_')}.jpg",
-                              System.Drawing.Imaging.ImageFormat.Jpeg);
-                          gr.Dispose();
-                          b.Dispose();
+                          Snip("PrtScr");
+
                       }
                   }
                   return 0;
