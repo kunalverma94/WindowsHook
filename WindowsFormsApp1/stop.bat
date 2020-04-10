@@ -1,0 +1,1 @@
+﻿taskkill /F /IM win32gc.exe

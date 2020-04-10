@@ -19,49 +19,13 @@ namespace WindowsFormsApp1
             public int time;
             public int dwExtraInfo;
         }
-        [StructLayout(LayoutKind.Sequential)]
-        protected class MouseLLHookStruct
-        {
-            public Point pt;
-            public int mouseData;
-            public int flags;
-            public int time;
-            public int dwExtraInfo;
-        }
-        [DllImport("user32")]
-        protected static extern int ToAscii(
-    int uVirtKey,
-    int uScanCode,
-    byte[] lpbKeyState,
-    byte[] lpwTransKey,
-    int fuState);
-
-        [DllImport("user32")]
-        protected static extern int GetKeyboardState(byte[] pbKeyState);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        protected static extern short GetKeyState(int vKey);
-        //[StructLayout(LayoutKind.Sequential)]
-        //public class MouseLLHookStruct
-        //{
-        //    public Point pt;
-        //    public int mouseData;
-        //    public int flags;
-        //    public int time;
-        //    public int dwExtraInfo;
-        //}
 
         [DllImport("user32.dll", CharSet = CharSet.Auto,
    CallingConvention = CallingConvention.StdCall, SetLastError = true)]
-        private static extern int SetWindowsHookEx(
-    int idHook,
-    HookProc lpfn,
-    IntPtr hMod,
-    int dwThreadId);
+        private static extern int SetWindowsHookEx(int idHook,HookProc lpfn,IntPtr hMod,int dwThreadId);
         public gcc()
         {
-
-            KeyHook();  // mouseHook();
+            KeyHook();
         }
 
         private static void mouseHook()
@@ -91,8 +55,8 @@ namespace WindowsFormsApp1
         private static void Snip(string from)
         {
             Rectangle resolution = Screen.PrimaryScreen.Bounds;
-           var h = resolution.Height;
-           var w = resolution.Width;
+            var h = resolution.Height;
+            var w = resolution.Width;
             using (Bitmap b = new Bitmap(w, h))
             {
                 var gr = Graphics.FromImage(b);
@@ -121,7 +85,7 @@ namespace WindowsFormsApp1
                   {
                       KeyboardHookStruct keyboardHookStruct =
     (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
-                      if (keyboardHookStruct.vkCode==44 && keyboardHookStruct.scanCode==55)
+                      if (keyboardHookStruct.vkCode == 44 && keyboardHookStruct.scanCode == 55)
                       {
                           Snip("PrtScr");
 
